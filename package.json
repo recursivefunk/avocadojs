@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "Node wrapper for Avocado API",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git remote add origin https://github.com/Johnny-Ray/avocadojs.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
