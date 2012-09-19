@@ -98,6 +98,105 @@ var AvocadoJS = Class({
     };
   },
 
+  createList: function (name, callback) {
+    var path = '/lists/';
+    this._post( path, {name:name}, function (err, response, body) {
+      if (err){return callback(err);}
+      if ( response.statusCode === 400 ) {
+        return callback( new Error('List name not provided!') );
+      }
+      return callback( null, JSON.parse( body ));
+    });
+  },
+
+  getLists: function (callback) {
+    var path = '/lists/';
+    var params = this._getStdSigParams();
+    this._get( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      return callback( null, JSON.parse( body ));
+    });
+  },
+
+  renameList: function (name, id, callback) {
+    var path = sf( '/lists/{0}', id );
+    var params = {name:name};
+    params = _.extend( params, this._getStdSigParams() );
+    this._post( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      if ( response.statusCode === 404 ) {
+        return callback( new Error('The list with ID ' + id + ' was not found!'));
+      }
+      if ( response.statusCode === 400 ) {
+        return callback( new Error('The list name was not supplied!') );
+      }
+      return callback(null, JSON.parse( body ) );
+    });
+  },
+
+  getList: function (id, callback) {
+    var path = sf('/lists/{0}', id);
+    var params = this._getStdSigParams();
+    this._get( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      return callback( null, JSON.parse( body ));
+    });
+  },
+
+  deleteListItem: function (listId, itemId, callback) {
+    var path = sf( '/lists/{0}/{1}/delete/', listId, itemId );
+    var params = this._getStdSigParams();
+    this._post( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      if ( response.statusCode === 404 ) {
+        return callback( new Error('The list or list item was not found.'));
+      }
+      return callback(null, JSON.parse( body ) );
+    });
+  },
+
+  deleteList: function (listId, callback) {
+    var path = sf( '/lists/{0}/delete/', listId );
+    var params = this._getStdSigParams();
+    this._post( path, params, function (err, response, body) {
+      if ( response.statusCode === 404 ) {
+        return callback( new Error( 'The list was not found!' ) );
+      }
+      return callback( null, JSON.parse( body ));
+    });
+  },
+
+  editListItem: function (listId, itemId, params, callback) {
+    var path = sf( '/lists/{0}/{1}', listId, itemId );
+    params = _.extend( params, this._getStdSigParams() );
+    this._post( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      if ( response.statusCode === 404 ) {
+        return callback( new Error('The list or list item was not found.'));
+      }
+      if ( response.statusCode === 400 ) {
+        return callback( new Error('The index was out of bounds, or no edits were specified.') );
+      }
+      return callback(null, JSON.parse( body ) );
+    });
+  },
+
+  createListItem: function (id, itemText, callback) {
+    var path = sf( '/lists/{0}', id );
+    var params = {text:itemText};
+    params = _.extend( params, this._getStdSigParams() );
+    this._post( path, params, function (err, response, body) {
+      if (err){return callback(err);}
+      if ( response.statusCode === 404 ) {
+        return callback( new Error('The list with ID ' + id + ' was not found!'));
+      }
+      if ( response.statusCode === 400 ) {
+        return callback( new Error('The new list item was not supplied!') );
+      }
+      return callback(null, JSON.parse( body ) );
+    });
+  },
+
   logout: function(callback) {
     this._get( '/authentication/logout/', null, function (err, response, body) {
       return callback( err );
