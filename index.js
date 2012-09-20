@@ -42,12 +42,16 @@ var AvocadoJS = Class({
     sigRequest.send();
   },
 
-  _post: function (path, formData, callback) {
-    if ( !this.loggedIn ) {return callback( new Error('You must be logged in to complete this request!'));}
+  _performRequest: function (opts, formData, callback) {
     var self = this;
-    var url = this._buildUrl(this.apiEndpoint, path, {});
+    
+    if ( !this.loggedIn ) {
+      return callback( new Error( 'You must be logged in to complete this request!' ) );
+    }
+    
+    var url = this._buildUrl( this.apiEndpoint, opts.path, {} );
     var blah = self.request({
-      method: 'POST',
+      method: opts.method,
       jar: self.cookieJar,
       form: formData,
       url: url,
@@ -60,31 +64,14 @@ var AvocadoJS = Class({
     });
   },
 
-  _get: function (path, params, callback) {
-    if ( !this.loggedIn ) {return callback( new Error('You must be logged in to complete this request!'));}
-    var self = this;
-    var url = this._buildUrl(this.apiEndpoint, path, params);
-    var blah = self.request({
-      method: 'GET',
-      jar: self.cookieJar,
-      url: url,
-      headers: {
-        'X-AvoSig': self.config.signature,
-        'User-Agent': 'Avocado Node Api Client v.1.0'
-      }
-    }, function (err, response, body) {
-      return callback(err, response, body);
-    });
-  },
-
-  _sendPost: function (opts, params, callback) {
+  _send: function (opts, params, callback) {
     var _404= 'Not Found';
     var _400 = 'Missing Data';
     var msg;
     params = params || {};
     params = _.extend( params, this._getStdSigParams() );
-    opts = opts || {};
-    this._post( opts.path, params, function (err, response, body) {
+
+    function onRequestComplete ( err, response, body ) {
       
       if ( err ) {
         return callback( err );
@@ -108,7 +95,9 @@ var AvocadoJS = Class({
       }
 
       return callback( null, obj );
-    });
+    }
+
+    return this._performRequest( opts, params, onRequestComplete );
   },
 
   _buildUrl: function (endpoint, path, params) {
@@ -133,151 +122,129 @@ var AvocadoJS = Class({
   },
 
   createList: function (name, callback) {
-    return this._sendPost({
+    return this._send({
       path: '/lists/',
-      _400: 'List name not provided'
+      _400: 'List name not provided',
+      method: 'post'
     }, {
       name: name
     }, callback);
   },
 
   getLists: function (callback) {
-    var path = '/lists/';
-    var params = this._getStdSigParams();
-    this._get( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      return callback( null, JSON.parse( body ));
-    });
+    return this._send({
+      path: '/lists/'
+    }, {}, callback);
   },
 
   renameList: function (name, id, callback) {
-    return this._sendPost({
+    return this._send({
       path: sf( '/lists/{0}/', id ),
       _404: 'The list was not found',
-      _400: 'The list name was not supplied'
+      _400: 'The list name was not supplied',
+      method: 'post'
     }, {
       name: name
     }, callback);
   },
 
   getList: function (id, callback) {
-    var path = sf('/lists/{0}', id);
-    var params = this._getStdSigParams();
-    this._get( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      return callback( null, JSON.parse( body ));
-    });
+    return this._send({
+      path: sf( '/lists/{0}/', id ),
+      medhod: 'get'
+    }, {}, callback);
   },
 
   deleteListItem: function (listId, itemId, callback) {
-    return this._sendPost({
+    return this._send({
       path: sf( '/lists/{0}/{1}/delete/', listId, itemId ),
-      _404: 'The list item was not found'
+      _404: 'The list item was not found',
+      method: 'post'
     }, {}, callback);
   },
 
   deleteList: function (listId, callback) {
-    return this._sendPost({
+    return this._send({
       path: sf( '/lists/{0}/delete/', listId ),
-      _404: 'The list was not found'
+      _404: 'The list was not found',
+      method: 'post'
     }, {}, callback);
   },
 
   editListItem: function (listId, itemId, params, callback) {
-    return this._sendPost({
+    return this._send({
       path: sf( '/lists/{0}/{1}', listId, itemId ),
       _404: 'The list or list item was not found',
-      _400: 'The index was out of bounds, or no edits were specified'
+      _400: 'The index was out of bounds, or no edits were specified',
+      method: 'post'
     }, params, callback);
   },
 
   createListItem: function (id, itemText, callback) {
-    return this._sendPost({
+    return this._send({
       path: sf( '/lists/{0}/', id ),
       _404: 'The list was not found!',
-      _400: 'The new list item was not supplied!'
+      _400: 'The new list item was not supplied!',
+      method: 'post'
     }, {
       text: itemText
     }, callback);
   },
 
   logout: function(callback) {
-    this._get( '/authentication/logout/', null, function (err, response, body) {
-      return callback( err );
+    return this._send({
+      path: '/authentication/logout/'
+    }, {}, function (err, body) {
+      self.isLoggedIn = false;
+      return callback( err, body );
     });
   },
 
   getCouple: function (callback) {
-    var self = this;
-    var params = this._getStdSigParams();
-
-    this._get( '/couple/', params, function (err, response, body) {
-      if (err) {
-        return callback(err);
-      }
-      return callback(null, JSON.parse( body ));
-    });
+    return this._send({
+      path: '/couple/'
+    }, {}, callback);
   },
 
   sendMessage: function(text, callback) {
-    this._sendPost({
+    this._send({
       path: '/conversation/',
-      _404: 'Empty or otherwise bad-news message'
+      _404: 'Empty or otherwise bad-news message',
+      method: 'post'
     }, {
       message: text
     }, callback);
   },
 
+  // TODO: Fix Bug here. Queries for after 'now' bring back ALL activities when they
+  // should bring back none
   getActivities: function (opts, callback) {
-    var path = '/activities/';
-    var params = {};
     if ( opts.before && opts.after ) {
       return callback( new Error('You cannot specifiy both before and after times.') );
     }
-    if ( opts.before ) {
-      params.before = opts.before;
-    }
-    if ( opts.after ) {
-      params.after = opts.after;
-    }
-    params = _.extend( params, this._getStdSigParams() );
-    this._get( path, params, function (err, response, body) {
-      if (err) {return callback(err);}
-      return callback(null, JSON.parse(body) );
-    });
+    return this._send({
+      path: '/activities/'
+    }, opts, callback);
   },
 
   deleteActivity: function (id, callback) {
-    var path = sf( '/activities/{0}/delete/', id );
-
-    this._post( path, {}, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('ID ' + id + ' was not found!') );
-      }
-      return callback(null);
-    });
+    return this._send({
+      path: sf( '/activities/{0}/delete/', id ),
+      method: 'post',
+      _404: sf( 'ID {0} was not found!', id )
+    }, {}, callback);
   },
 
   getCurrentUsers: function (callback) {
-    var params = this._getStdSigParams();
-
-    this._get( '/user/', params, function (err, response, body) {
-      if (err) {return callback(err);}
-      return callback( null, JSON.parse( body ) );
-    });
+    return this._send({
+      path: '/user/'
+    }, {}, callback);
   },
 
   getUser: function (id, callback) {
-    var params = this._getStdSigParams();
-    var path = '/user/' + id + '/';
-
-    this._get(path, params, function (err, response, body) {
-      if (err) {
-        return callback(err);
-      }
-      return callback(null, JSON.parse( body ));
-    });
+    return this._send({
+      path: sf( '/user/{0}/', id )
+    }, {}, callback);
   }
 
 });
