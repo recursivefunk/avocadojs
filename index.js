@@ -48,9 +48,14 @@ var AvocadoJS = Class({
     if ( !this.loggedIn ) {
       return callback( new Error( 'You must be logged in to complete this request!' ) );
     }
-    
-    var url = this._buildUrl( this.apiEndpoint, opts.path, {} );
-    var blah = self.request({
+
+    var url = this.apiEndpoint + opts.path;
+
+    if ( ( !opts.method || opts.method === 'get' ) && formData ) {
+      url = this._buildUrl( this.apiEndpoint, opts.path, formData );
+    }
+
+    self.request({
       method: opts.method,
       jar: self.cookieJar,
       form: formData,
