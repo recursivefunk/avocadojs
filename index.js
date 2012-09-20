@@ -77,6 +77,40 @@ var AvocadoJS = Class({
     });
   },
 
+  _sendPost: function (opts, params, callback) {
+    var _404= 'Not Found';
+    var _400 = 'Missing Data';
+    var msg;
+    params = params || {};
+    params = _.extend( params, this._getStdSigParams() );
+    opts = opts || {};
+    this._post( opts.path, params, function (err, response, body) {
+      
+      if ( err ) {
+        return callback( err );
+      }
+      
+      if ( response.statusCode === 404 ) {
+        msg = opts._404 || _404;
+        return callback( new Error( msg ) );
+      }
+
+      if ( response.statusCode === 400 ) {
+        msg = opts._400 || _400;
+        return callback( new Error( msg ) );
+      }
+
+      var obj;
+      try {
+        obj = JSON.parse( body );
+      } catch ( e ) {
+        return callback( new Error( 'Malformed Response' ) );
+      }
+
+      return callback( null, obj );
+    });
+  },
+
   _buildUrl: function (endpoint, path, params) {
     var base = endpoint + path;
     if (params) {
@@ -99,14 +133,12 @@ var AvocadoJS = Class({
   },
 
   createList: function (name, callback) {
-    var path = '/lists/';
-    this._post( path, {name:name}, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 400 ) {
-        return callback( new Error('List name not provided!') );
-      }
-      return callback( null, JSON.parse( body ));
-    });
+    return this._sendPost({
+      path: '/lists/',
+      _400: 'List name not provided'
+    }, {
+      name: name
+    }, callback);
   },
 
   getLists: function (callback) {
@@ -119,19 +151,13 @@ var AvocadoJS = Class({
   },
 
   renameList: function (name, id, callback) {
-    var path = sf( '/lists/{0}', id );
-    var params = {name:name};
-    params = _.extend( params, this._getStdSigParams() );
-    this._post( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('The list with ID ' + id + ' was not found!'));
-      }
-      if ( response.statusCode === 400 ) {
-        return callback( new Error('The list name was not supplied!') );
-      }
-      return callback(null, JSON.parse( body ) );
-    });
+    return this._sendPost({
+      path: sf( '/lists/{0}/', id ),
+      _404: 'The list was not found',
+      _400: 'The list name was not supplied'
+    }, {
+      name: name
+    }, callback);
   },
 
   getList: function (id, callback) {
@@ -144,57 +170,35 @@ var AvocadoJS = Class({
   },
 
   deleteListItem: function (listId, itemId, callback) {
-    var path = sf( '/lists/{0}/{1}/delete/', listId, itemId );
-    var params = this._getStdSigParams();
-    this._post( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('The list or list item was not found.'));
-      }
-      return callback(null, JSON.parse( body ) );
-    });
+    return this._sendPost({
+      path: sf( '/lists/{0}/{1}/delete/', listId, itemId ),
+      _404: 'The list item was not found'
+    }, {}, callback);
   },
 
   deleteList: function (listId, callback) {
-    var path = sf( '/lists/{0}/delete/', listId );
-    var params = this._getStdSigParams();
-    this._post( path, params, function (err, response, body) {
-      if ( response.statusCode === 404 ) {
-        return callback( new Error( 'The list was not found!' ) );
-      }
-      return callback( null, JSON.parse( body ));
-    });
+    return this._sendPost({
+      path: sf( '/lists/{0}/delete/', listId ),
+      _404: 'The list was not found'
+    }, {}, callback);
   },
 
   editListItem: function (listId, itemId, params, callback) {
-    var path = sf( '/lists/{0}/{1}', listId, itemId );
-    params = _.extend( params, this._getStdSigParams() );
-    this._post( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('The list or list item was not found.'));
-      }
-      if ( response.statusCode === 400 ) {
-        return callback( new Error('The index was out of bounds, or no edits were specified.') );
-      }
-      return callback(null, JSON.parse( body ) );
-    });
+    return this._sendPost({
+      path: sf( '/lists/{0}/{1}', listId, itemId ),
+      _404: 'The list or list item was not found',
+      _400: 'The index was out of bounds, or no edits were specified'
+    }, params, callback);
   },
 
   createListItem: function (id, itemText, callback) {
-    var path = sf( '/lists/{0}', id );
-    var params = {text:itemText};
-    params = _.extend( params, this._getStdSigParams() );
-    this._post( path, params, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('The list with ID ' + id + ' was not found!'));
-      }
-      if ( response.statusCode === 400 ) {
-        return callback( new Error('The new list item was not supplied!') );
-      }
-      return callback(null, JSON.parse( body ) );
-    });
+    return this._sendPost({
+      path: sf( '/lists/{0}/', id ),
+      _404: 'The list was not found!',
+      _400: 'The new list item was not supplied!'
+    }, {
+      text: itemText
+    }, callback);
   },
 
   logout: function(callback) {
@@ -216,14 +220,12 @@ var AvocadoJS = Class({
   },
 
   sendMessage: function(text, callback) {
-    var path = '/conversation/';
-    this._post( path, {message:text}, function (err, response, body) {
-      if (err){return callback(err);}
-      if ( response.statusCode === 404 ) {
-        return callback( new Error('An error occured while sending message.') );
-      }
-      return callback(null, JSON.parse( body ));
-    });
+    this._sendPost({
+      path: '/conversation/',
+      _404: 'Empty or otherwise bad-news message'
+    }, {
+      message: text
+    }, callback);
   },
 
   getActivities: function (opts, callback) {
