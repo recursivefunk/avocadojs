@@ -44,7 +44,7 @@ var AvocadoJS = Class({
 
   _performRequest: function (opts, formData, callback) {
     var self = this;
-    
+
     if ( !this.loggedIn ) {
       return callback( new Error( 'You must be logged in to complete this request!' ) );
     }
@@ -216,7 +216,7 @@ var AvocadoJS = Class({
     }, callback);
   },
 
-  // TODO: Fix Bug here. Queries for after 'now' bring back ALL activities when they
+  // TODO: Fix Bug here. Activity queries for after 'now' bring back ALL activities when they
   // should bring back none
   getActivities: function (opts, callback) {
     if ( opts.before && opts.after ) {
