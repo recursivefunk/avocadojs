@@ -30,7 +30,7 @@ avo.login(function(err, currentUser) {
 ```
 
 ### Tests
-# You'll need a config.json file with the following
+#### You'll need a config.json file with the following
 ```
 {
   "devId": "devId",
@@ -39,7 +39,7 @@ avo.login(function(err, currentUser) {
   "password": "avocadopwd"
 }
 ```
-# Then run
+#### Then run
 ```
 $ npm install -g mocha
 $ make
