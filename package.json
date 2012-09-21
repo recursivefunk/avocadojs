@@ -1,6 +1,6 @@
 {
   "name": "avocadojs",
-  "version": "0.0.0",
+  "version": "0.5.0",
   "description": "Node wrapper for Avocado API",
   "main": "index.js",
   "repository": {
