@@ -8,6 +8,8 @@ var assert = require( 'assert' );
 var should = require( 'should' );
 
 describe('Lists', function(){
+  var file = fs.readFileSync( './config.json', 'utf8' );
+  var config = JSON.parse( file ).valid;
   var avo;
   var listId;
   var listItemId;
@@ -16,8 +18,6 @@ describe('Lists', function(){
   var listNewName = 'My new title';
 
   beforeEach(function (done) {
-    var file = fs.readFileSync( '../config.json', 'utf8' );
-    var config = JSON.parse( file );
     avo = new AvocadoJS( config );
     avo.login(function (err) {
       return done();

@@ -7,10 +7,11 @@ var AvocadoJS = require( '../index' );
 var assert = require( 'assert' );
 var should = require( 'should' );
 
-describe('Activities', function(){
+describe('Messages', function(){
   var file = fs.readFileSync( './config.json', 'utf8' );
   var config = JSON.parse( file ).valid;
   var avo;
+  var messageId;
 
   beforeEach(function (done) {
     avo = new AvocadoJS( config );
@@ -25,22 +26,21 @@ describe('Activities', function(){
     });
   });
 
-  describe('Activity Model', function () {
+  describe('Message Model', function () {
 
-    it( 'returns the last 100 activities', function (done) {
-      avo.getActivities({}, function (err, activities) {
+    it( 'sends a message', function (done) {
+      avo.sendMessage('Testing 123', function (err, message) {
         should.not.exist( err );
-        activities.should.be.instanceof( Array );
-        activities.length.should.equal( 100 );
+        message.should.have.property( 'id' );
+        messageId = message.id;
         return done();
       });
     });
 
-    it( 'returns 0 activities', function (done) {
-      avo.getActivities({ after: Date.now() }, function (err, activities) {
+    it( 'delete recently created message', function (done) {
+      avo.deleteActivity(messageId, function (err, resp) {
         should.not.exist( err );
-        activities.should.be.instanceof( Array );
-        activities.length.should.be.equal( 0 );
+        resp.should.be.equal( 'OK' );
         return done();
       });
     });

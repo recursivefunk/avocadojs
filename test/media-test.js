@@ -7,10 +7,11 @@ var AvocadoJS = require( '../index' );
 var assert = require( 'assert' );
 var should = require( 'should' );
 
-describe('Activities', function(){
+describe('Media', function(){
   var file = fs.readFileSync( './config.json', 'utf8' );
   var config = JSON.parse( file ).valid;
   var avo;
+  var messageId;
 
   beforeEach(function (done) {
     avo = new AvocadoJS( config );
@@ -25,24 +26,26 @@ describe('Activities', function(){
     });
   });
 
-  describe('Activity Model', function () {
+  describe('Media Model', function () {
 
-    it( 'returns the last 100 activities', function (done) {
-      avo.getActivities({}, function (err, activities) {
+    it( 'returns an array of all media', function (done) {
+      avo.getMedia( { before: Date.now() }, function (err, mediaList) {
         should.not.exist( err );
-        activities.should.be.instanceof( Array );
-        activities.length.should.equal( 100 );
+        mediaList.should.be.instanceof( Array );
+        // assuming account has media items associated with it
+        mediaList.length.should.be.above( 0 );
         return done();
       });
     });
 
-    it( 'returns 0 activities', function (done) {
-      avo.getActivities({ after: Date.now() }, function (err, activities) {
+    it( 'returns an empty array', function (done) {
+      avo.getMedia( { after: Date.now() }, function (err, mediaList) {
         should.not.exist( err );
-        activities.should.be.instanceof( Array );
-        activities.length.should.be.equal( 0 );
+        mediaList.should.be.instanceof( Array );
+        mediaList.length.should.equal( 0 );
         return done();
       });
     });
+
   });
 });
