@@ -1,3 +1,5 @@
+'use strict';
+/*global require:false */
 
 var Class = require( 'class' ).Class;
 var sf = require( 'sf' );
@@ -5,7 +7,7 @@ var fs = require( 'fs' );
 var _ = require( 'underscore' );
 var SignatureRequest = require( './lib/sigrequest' );
 
-var AvocadoJS = Class({
+var AvocadoJS = new Class({
 
   apiEndpoint: 'https://avocado.io/api',
 
@@ -146,6 +148,7 @@ var AvocadoJS = Class({
     };
   },
 
+  // TODO: This is broken
   upload: function (path, caption, callback) {
     var self = this;
     caption = caption || '';
@@ -158,7 +161,7 @@ var AvocadoJS = Class({
 
       fs.readFile( path, function (err, buff) {
         if ( err ) {
-          return callbaback( err );
+          return callback( err );
         }
 
         self._send({
@@ -169,14 +172,6 @@ var AvocadoJS = Class({
           media: buff
         }, callback);
       });
-
-      // self._send({
-      //   path: '/media/',
-      //   method: 'post'
-      // }, {
-      //   caption: caption,
-      //   media: fs.createReadStream( path )
-      // }, callback);
     });
   },
 
@@ -283,8 +278,6 @@ var AvocadoJS = Class({
     }, callback);
   },
 
-  // TODO: Fix Bug here. Activity queries for after 'now' bring back ALL activities when they
-  // should bring back none
   getActivities: function (opts, callback) {
     if ( opts.before && opts.after ) {
       return callback( new Error('You cannot specifiy both before and after times.') );
