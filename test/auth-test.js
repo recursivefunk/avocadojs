@@ -1,5 +1,5 @@
 'use strict';
-/*global require module describe beforeEach it should*/
+/*global require module describe beforeEach it afterEach*/
 
 describe('Authentication', function(){
   var fs = require( 'fs' );
