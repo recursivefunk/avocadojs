@@ -1,6 +1,7 @@
 
 var Class = require( 'class' ).Class;
 var sf = require( 'sf' );
+var fs = require( 'fs' );
 var _ = require( 'underscore' );
 var SignatureRequest = require( './lib/sigrequest' );
 
@@ -22,7 +23,8 @@ var AvocadoJS = Class({
   login: function (callback) {
     var self = this;
     var sigRequest = new SignatureRequest( this.config );
-    sigRequest.on('io.avocado.request.success', function (data) {
+    
+    sigRequest.on( 'io.avocado.request.success', function (data) {
       self.config.signature = sigRequest.config.signature;
       self.config.cookieValue = sigRequest.config.cookieValue;
       self.cookieJar = self.request.jar();
@@ -33,10 +35,17 @@ var AvocadoJS = Class({
       try {
         data = JSON.parse( data );
         self.loggedIn = true;
+        if ( typeof data === 'string' ) {
+          return callback( new Error( data ) );
+        }
         return callback( null, data );
       } catch ( e ) {
         return callback( e );
       }
+    });
+
+    sigRequest.on( 'io.avocado.request.error', function (err) {
+      return callback( new Error( err ) );
     });
 
     sigRequest.send();
@@ -44,6 +53,7 @@ var AvocadoJS = Class({
 
   _performRequest: function (opts, formData, callback) {
     var self = this;
+    var media;
 
     if ( !this.loggedIn ) {
       return callback( new Error( 'You must be logged in to complete this request!' ) );
@@ -55,7 +65,12 @@ var AvocadoJS = Class({
       url = this._buildUrl( this.apiEndpoint, opts.path, formData );
     }
 
-    self.request({
+    if ( formData.media ) {
+      media = formData.media;
+      delete formData.media;
+    }
+
+    var r = self.request({
       method: opts.method,
       jar: self.cookieJar,
       form: formData,
@@ -67,6 +82,11 @@ var AvocadoJS = Class({
     }, function (err, response, body) {
       return callback(err, response, body);
     });
+
+    if ( media ) {
+      var form = r.form();
+      form.append( 'media', media );
+    }
   },
 
   _send: function (opts, params, callback) {
@@ -96,7 +116,7 @@ var AvocadoJS = Class({
       try {
         obj = JSON.parse( body );
       } catch ( e ) {
-        return callback( new Error( 'Malformed Response' ) );
+        return callback( new Error( sf( 'Response from server: {0}', body ) ) );
       }
 
       return callback( null, obj );
@@ -124,6 +144,47 @@ var AvocadoJS = Class({
     return {
       avosig: this.config.signature
     };
+  },
+
+  upload: function (path, caption, callback) {
+    var self = this;
+    caption = caption || '';
+    path = require( 'path' ).resolve( path );
+
+    fs.exists( path, function (exists) {
+      if ( !exists ) {
+        return callback( new Error( sf( "Media '{0}' does not exist", path ) ) );
+      }
+
+      fs.readFile( path, function (err, buff) {
+        if ( err ) {
+          return callbaback( err );
+        }
+
+        self._send({
+          path: '/media/',
+          method: 'post'
+        }, {
+          caption: caption,
+          media: buff
+        }, callback);
+      });
+
+      // self._send({
+      //   path: '/media/',
+      //   method: 'post'
+      // }, {
+      //   caption: caption,
+      //   media: fs.createReadStream( path )
+      // }, callback);
+    });
+  },
+
+  getPhotos: function (params, callback) {
+    params = params || { before: Date.now() };
+    return this._send({
+      path: '/media/'
+    }, params, callback);
   },
 
   createList: function (name, callback) {
@@ -197,6 +258,7 @@ var AvocadoJS = Class({
   },
 
   logout: function(callback) {
+    var self = this;
     return this._send({
       path: '/authentication/logout/'
     }, {}, function (err, body) {
