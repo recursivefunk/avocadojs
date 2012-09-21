@@ -6,7 +6,7 @@ auth-test:
 	mocha -t 10000 test/auth-test.js
 
 media-test:
-	mocha -t 10000 test/media-test.js
+	mocha -t 15000 test/media-test.js
 
 activity-test:
 	mocha -t 10000 test/activity-test.js

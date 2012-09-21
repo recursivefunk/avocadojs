@@ -12,6 +12,8 @@ describe('Media', function(){
   var config = JSON.parse( file ).valid;
   var avo;
   var messageId;
+  var mediaId;
+  var caption = 'Test upload';
 
   beforeEach(function (done) {
     avo = new AvocadoJS( config );
@@ -47,5 +49,49 @@ describe('Media', function(){
       });
     });
 
+    it( 'uploads a photo', function (done) {
+      avo.upload( config.testMedia, caption, function (err, mediaObj) {
+        should.not.exist( err );
+        mediaObj.should.have.property( 'id' );
+        mediaId = mediaObj.id;
+        mediaObj.should.have.property( 'caption' );
+        mediaObj.caption.should.equal( caption );
+        mediaObj.should.have.property( 'url' );
+        return done();
+      });
+    });
+
+    it( 'delete the media', function (done) {
+      avo.deleteMedia( mediaId, function (err, msg) {
+        should.not.exist( err );
+        msg.should.be.equal( 'OK' );
+        return done();
+      });
+    });
+
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

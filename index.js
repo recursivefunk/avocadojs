@@ -56,6 +56,7 @@ var AvocadoJS = new Class({
   _performRequest: function (opts, formData, callback) {
     var self = this;
     var media;
+    var caption;
 
     if ( !this.loggedIn ) {
       return callback( new Error( 'You must be logged in to complete this request!' ) );
@@ -69,7 +70,8 @@ var AvocadoJS = new Class({
 
     if ( formData.media ) {
       media = formData.media;
-      delete formData.media;
+      caption = formData.caption || '';
+      formData = {};
     }
 
     var r = self.request({
@@ -88,6 +90,7 @@ var AvocadoJS = new Class({
     if ( media ) {
       var form = r.form();
       form.append( 'media', media );
+      form.append( 'caption', caption );
     }
   },
 
@@ -148,30 +151,23 @@ var AvocadoJS = new Class({
     };
   },
 
-  // TODO: This is broken
   upload: function (path, caption, callback) {
     var self = this;
     caption = caption || '';
     path = require( 'path' ).resolve( path );
-
     fs.exists( path, function (exists) {
       if ( !exists ) {
         return callback( new Error( sf( "Media '{0}' does not exist", path ) ) );
       }
 
-      fs.readFile( path, function (err, buff) {
-        if ( err ) {
-          return callback( err );
-        }
-
-        self._send({
-          path: '/media/',
-          method: 'post'
-        }, {
-          caption: caption,
-          media: buff
-        }, callback);
-      });
+      var buff = fs.readFileSync( path );
+      self._send({
+        path: '/media/',
+        method: 'post'
+      }, {
+        caption: caption,
+        media: fs.createReadStream( path )
+      }, callback);
     });
   },
 
@@ -180,6 +176,14 @@ var AvocadoJS = new Class({
     return this._send({
       path: '/media/'
     }, params, callback);
+  },
+
+  deleteMedia: function (id, callback) {
+    return this._send({
+      path: sf( '/media/{0}/delete/', id ),
+      method: 'post',
+      _404: sf( 'Could not find the item with the given ID {0}', id )
+    }, {}, callback);
   },
 
   createList: function (name, callback) {
