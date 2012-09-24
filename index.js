@@ -282,6 +282,7 @@ var AvocadoJS = new Class({
     }, callback);
   },
 
+  // TODO change to getRecentActivities
   getActivities: function (opts, callback) {
     if ( opts.before && opts.after ) {
       return callback( new Error('You cannot specifiy both before and after times.') );
