@@ -89,7 +89,7 @@ avo.login(function(err, currentUserModel) {
 ```
   avo.upload( '/path/to/media.jpeg'/, function (err, newMediaModel) {} );
   
-  avo.getMedia( {
+  avo.getRecentMedia( {
     before: Date.now() //  Unix timestamp in milliseconds
     after: Date.now() //  Unix timestamp in milliseconds
   }, function (err, mediaModelArray) {} );
