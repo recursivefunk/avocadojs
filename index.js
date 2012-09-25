@@ -171,7 +171,7 @@ var AvocadoJS = new Class({
     });
   },
 
-  getMedia: function (params, callback) {
+  getRecentMedia: function (params, callback) {
     params = params || { before: Date.now() };
     return this._send({
       path: '/media/'

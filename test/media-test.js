@@ -31,7 +31,7 @@ describe('Media', function(){
   describe('Media Model', function () {
 
     it( 'returns an array of all media', function (done) {
-      avo.getMedia( { before: Date.now() }, function (err, mediaList) {
+      avo.getRecentMedia( { before: Date.now() }, function (err, mediaList) {
         should.not.exist( err );
         mediaList.should.be.instanceof( Array );
         // assuming account has media items associated with it
@@ -41,7 +41,7 @@ describe('Media', function(){
     });
 
     it( 'returns an empty array', function (done) {
-      avo.getMedia( { after: Date.now() }, function (err, mediaList) {
+      avo.getRecentMedia( { after: Date.now() }, function (err, mediaList) {
         should.not.exist( err );
         mediaList.should.be.instanceof( Array );
         mediaList.length.should.equal( 0 );
