@@ -35,7 +35,7 @@ avo.login(function(err, currentUserModel) {
    
    avo.logout( function ( err ) {} );
    
-   avo.getAcitivities( {
+   avo.getActivities( {
     before: Date.now() //  Unix timestamp in milliseconds OR
     after: Date.now() //  Unix timestamp in milliseconds
     
