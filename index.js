@@ -163,25 +163,6 @@ var AvocadoJS = new Class({
     return this._performRequest( opts, params, onRequestComplete );
   },
 
-  _buildKissUrl: function (kisses, path) {
-    var self = this;
-    var base = this.apiEndpoint + path + '?';
-
-    kisses.forEach(function (kiss) {
-      if ( kiss.x && kiss.y && kiss.rotation) {
-        if ( base.indexOf( 'x=') > -1 ) {
-          base += '&x=';
-        } else {
-          base += 'x=';
-        }
-        base += kiss.x + '&y=' + kiss.y + '&rotation=' + kiss.rotation;
-      } else {
-        throw new Error( 'Improperly formatted kisses! Is this your first time?' );
-      }
-    });
-    return base;
-  },
-
   _buildUrl: function (endpoint, path, params) {
     var base = endpoint + path;
     if (params) {
