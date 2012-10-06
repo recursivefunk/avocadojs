@@ -5,6 +5,7 @@ var Class = require( 'class' ).Class;
 var sf = require( 'sf' );
 var fs = require( 'fs' );
 var path = require( 'path' );
+var utils = require('./lib/utils');
 var _ = require( 'underscore' );
 var SignatureRequest = require( './lib/sigrequest' );
 
@@ -80,9 +81,11 @@ var AvocadoJS = new Class({
 
     if ( ( !opts.method || opts.method === 'get' ) && formData ) {
       url = this._buildUrl( this.apiEndpoint, opts.path, formData );
+    } else {
+      delete formData.avosig;
     }
 
-    var r = self.request({
+    var requestOpts = {
       method: opts.method,
       jar: self.cookieJar,
       url: url,
@@ -90,7 +93,13 @@ var AvocadoJS = new Class({
         'X-AvoSig': self.config.signature,
         'User-Agent': 'Avocado Node Api Client v.1.0'
       }
-    }, function (err, response, body) {
+    };
+
+    if ( formData && !utils.objectEmpty( formData ) ) {
+      requestOpts.form = formData;
+    }
+
+    var r = self.request( requestOpts, function (err, response, body) {
       return callback(err, response, body);
     });
 
