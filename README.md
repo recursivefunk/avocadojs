@@ -30,12 +30,12 @@ avo.login(function(err, currentUserModel) {
 ```
 ### Methods
 #### General
-```
+```javascript
    avo.login( function (err, currentUserModel) {} );
    
    avo.logout( function ( err ) {} );
    
-   avo.getActivities( {
+   avo.getRecentActivities( {
     before: Date.now() //  Unix timestamp in milliseconds OR
     after: Date.now() //  Unix timestamp in milliseconds
     
@@ -49,7 +49,7 @@ avo.login(function(err, currentUserModel) {
 ```
 
 #### Users
-```
+```javascript
   avo.getCouple( function (err, currentCoupleModel) {} );
   
   avo.getCurrentUsers( function (err, currentUsersModel) {} );
@@ -58,7 +58,7 @@ avo.login(function(err, currentUserModel) {
 ```
 
 #### Lists
-```
+```javascript
   avo.createList( 'listName', function (err, newListModel) { } );
   
   avo.getLists( function (err, listOfListModels) );
@@ -81,12 +81,12 @@ avo.login(function(err, currentUserModel) {
 ```
 
 #### Messages
-```
+```javascript
   avo.sendMessage( 'hey boo', function (err, messageActivity) {} );
 ```
 
 #### Media
-```
+```javascript
   avo.upload( '/path/to/media.jpeg'/, function (err, newMediaModel) {} );
   
   avo.getRecentMedia( {
@@ -95,6 +95,27 @@ avo.login(function(err, currentUserModel) {
   }, function (err, mediaModelArray) {} );
   
   avo.deleteMedi( 'mediaId', function (err) {} );
+```
+
+#### Hugs & Kisses
+```javascript
+
+  // kisses is an array so, you may send more than one
+  // call it makeout if you like
+  var kisses = [
+    {
+      x: 0.6,
+      y: 0.2,
+      rotation: 0.5
+    }
+  ];
+
+  avo.kiss( {kisses: kisses}, function (err, newKissModel) {});
+
+  // by default, kisses will appear on your partner's current avatar
+  // but you may specify a different photo via the media parameter
+  var media = '/path/to/photo.jpg';
+  avo.kiss( {kisses: kisses, media: media}, function (err, newKissModel));
 ```
 
 For a detailed look at the various Model referenced please see the Avocado API docs https://avocado.io/guacamole/avocado-api

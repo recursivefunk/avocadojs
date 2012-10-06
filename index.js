@@ -4,6 +4,7 @@
 var Class = require( 'class' ).Class;
 var sf = require( 'sf' );
 var fs = require( 'fs' );
+var path = require( 'path' );
 var _ = require( 'underscore' );
 var SignatureRequest = require( './lib/sigrequest' );
 
@@ -56,6 +57,8 @@ var AvocadoJS = new Class({
   _performRequest: function (opts, formData, callback) {
     var self = this;
     var media;
+    var form;
+    var kisses;
     var caption;
 
     if ( !this.loggedIn ) {
@@ -64,20 +67,24 @@ var AvocadoJS = new Class({
 
     var url = this.apiEndpoint + opts.path;
 
-    if ( ( !opts.method || opts.method === 'get' ) && formData ) {
-      url = this._buildUrl( this.apiEndpoint, opts.path, formData );
-    }
-
     if ( formData.media ) {
       media = formData.media;
-      caption = formData.caption || '';
-      formData = {};
+      caption = formData.caption || null;
+      delete formData.media;
+    }
+
+    if ( formData.kisses ) {
+      kisses = formData.kisses;
+      delete formData.kisses;
+    }
+
+    if ( ( !opts.method || opts.method === 'get' ) && formData ) {
+      url = this._buildUrl( this.apiEndpoint, opts.path, formData );
     }
 
     var r = self.request({
       method: opts.method,
       jar: self.cookieJar,
-      form: formData,
       url: url,
       headers: {
         'X-AvoSig': self.config.signature,
@@ -87,10 +94,27 @@ var AvocadoJS = new Class({
       return callback(err, response, body);
     });
 
+    if ( media || kisses ) {
+      form = r.form();
+    }
+
+    if ( kisses ) {
+      kisses.forEach(function (kiss) {
+        if ( kiss.x && kiss.y && kiss.rotation ) {
+          form.append( 'x', kiss.x );
+          form.append( 'y', kiss.y );
+          form.append( 'rotation', kiss.rotation );
+        } else {
+          return callback( new Error('Improperly formatted kisse(s)! Is this your first time?'));
+        }
+      });
+    }
+
     if ( media ) {
-      var form = r.form();
       form.append( 'media', media );
-      form.append( 'caption', caption );
+      if ( caption ) {
+        form.append( 'caption', caption );
+      }
     }
   },
 
@@ -130,6 +154,25 @@ var AvocadoJS = new Class({
     return this._performRequest( opts, params, onRequestComplete );
   },
 
+  _buildKissUrl: function (kisses, path) {
+    var self = this;
+    var base = this.apiEndpoint + path + '?';
+
+    kisses.forEach(function (kiss) {
+      if ( kiss.x && kiss.y && kiss.rotation) {
+        if ( base.indexOf( 'x=') > -1 ) {
+          base += '&x=';
+        } else {
+          base += 'x=';
+        }
+        base += kiss.x + '&y=' + kiss.y + '&rotation=' + kiss.rotation;
+      } else {
+        throw new Error( 'Improperly formatted kisses! Is this your first time?' );
+      }
+    });
+    return base;
+  },
+
   _buildUrl: function (endpoint, path, params) {
     var base = endpoint + path;
     if (params) {
@@ -151,22 +194,53 @@ var AvocadoJS = new Class({
     };
   },
 
-  upload: function (path, caption, callback) {
+  hug: function (callback) {
+    return this._send({
+      path: '/conversation/hug/',
+      method: 'post'
+    }, {}, callback);
+  },
+
+  kiss: function (opts, callback) {
+    var form = {};
+
+    if ( opts.media ) {
+      form.media = path.resolve( opts.media );
+      if ( !fs.existsSync( form.media) ) {
+        return callback( new Error( sf( 'Media {media} does not exist!', form ) ) );
+      }
+      form.media = fs.createReadStream( form.media );
+    }
+
+    if ( opts.kisses ) {
+      form.kisses = opts.kisses;
+    } else {
+      return callback( new Error( 'Kisses are required!') );
+    }
+
+    return this._send({
+      path: '/conversation/kiss/',
+      method: 'post',
+      _400: ' Invalid kiss coordinates (out of range) and/or non-matching number of x, y, rotation'
+    }, form, callback);
+  },
+
+  upload: function (mediaPath, caption, callback) {
     var self = this;
     caption = caption || '';
-    path = require( 'path' ).resolve( path );
-    fs.exists( path, function (exists) {
+    mediaPath = require( 'path' ).resolve( mediaPath );
+    fs.exists( mediaPath, function (exists) {
       if ( !exists ) {
-        return callback( new Error( sf( "Media '{0}' does not exist", path ) ) );
+        return callback( new Error( sf( "Media '{0}' does not exist", mediaPath ) ) );
       }
 
-      var buff = fs.readFileSync( path );
+      var buff = fs.readFileSync( mediaPath );
       self._send({
         path: '/media/',
         method: 'post'
       }, {
         caption: caption,
-        media: fs.createReadStream( path )
+        media: fs.createReadStream( mediaPath )
       }, callback);
     });
   },
@@ -283,7 +357,7 @@ var AvocadoJS = new Class({
   },
 
   // TODO change to getRecentActivities
-  getActivities: function (opts, callback) {
+  getRecentActivities: function (opts, callback) {
     if ( opts.before && opts.after ) {
       return callback( new Error('You cannot specifiy both before and after times.') );
     }

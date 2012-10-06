@@ -28,7 +28,7 @@ describe('Activities', function(){
   describe('Activity Model', function () {
 
     it( 'returns the last 100 activities', function (done) {
-      avo.getActivities({}, function (err, activities) {
+      avo.getRecentActivities({}, function (err, activities) {
         should.not.exist( err );
         activities.should.be.instanceof( Array );
         activities.length.should.equal( 100 );
@@ -37,7 +37,7 @@ describe('Activities', function(){
     });
 
     it( 'returns 0 activities', function (done) {
-      avo.getActivities({ after: Date.now() }, function (err, activities) {
+      avo.getRecentActivities({ after: Date.now() }, function (err, activities) {
         should.not.exist( err );
         activities.should.be.instanceof( Array );
         activities.length.should.be.equal( 0 );
