@@ -20,3 +20,6 @@ message-test:
 user-test:
 	mocha -t 10000 test/user-test.js
 
+hug-kiss-test:
+	mocha -t 10000 test/hugs-and-kisses.js
+
