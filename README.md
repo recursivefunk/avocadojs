@@ -3,7 +3,7 @@
 npm install avocadojs
 ```
 ### Usage
-```
+```javascript
 var AvocadoJS = require( 'avocadojs' )
 var config = {
   devId: "devId",
@@ -87,7 +87,7 @@ avo.login(function(err, currentUserModel) {
 
 #### Media
 ```javascript
-  avo.upload( '/path/to/media.jpeg'/, function (err, newMediaModel) {} );
+  avo.upload( '/path/to/media.jpeg/', function (err, newMediaModel) {} );
   
   avo.getRecentMedia( {
     before: Date.now() //  Unix timestamp in milliseconds
