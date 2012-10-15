@@ -87,14 +87,14 @@ avo.login(function(err, currentUserModel) {
 
 #### Media
 ```javascript
-  avo.upload( '/path/to/media.jpeg/', function (err, newMediaModel) {} );
+  avo.upload( '/path/to/media.jpeg', function (err, newMediaModel) {} );
   
   avo.getRecentMedia( {
     before: Date.now() //  Unix timestamp in milliseconds
     after: Date.now() //  Unix timestamp in milliseconds
   }, function (err, mediaModelArray) {} );
   
-  avo.deleteMedi( 'mediaId', function (err) {} );
+  avo.deleteMedia( 'mediaId', function (err) {} );
 ```
 
 #### Hugs & Kisses
