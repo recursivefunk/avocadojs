@@ -22,6 +22,8 @@ var AvocadoJS = new Class({
     this.config = config;
     this.loggedIn = false;
     this.cookieJar = null;
+
+    this.COOKIE;
   },
 
   login: function (callback) {
@@ -33,6 +35,7 @@ var AvocadoJS = new Class({
       self.config.cookieValue = sigRequest.config.cookieValue;
       self.cookieJar = self.request.jar();
       var cookieStr = 'user_email=' + sigRequest.config.cookieValue + ';';
+      self.COOKIE = cookieStr;
       var cookie = self.request.cookie( cookieStr );
       self.cookieJar.add( cookie );
 
@@ -72,6 +75,9 @@ var AvocadoJS = new Class({
       media = formData.media;
       caption = formData.caption || null;
       delete formData.media;
+      if ( caption ) {
+        delete formData.caption;
+      }
     }
 
     if ( formData.kisses ) {
@@ -86,7 +92,7 @@ var AvocadoJS = new Class({
     }
 
     var requestOpts = {
-      method: opts.method,
+      method: opts.method || 'get',
       jar: self.cookieJar,
       url: url,
       headers: {
@@ -114,12 +120,13 @@ var AvocadoJS = new Class({
           form.append( 'y', kiss.y );
           form.append( 'rotation', kiss.rotation );
         } else {
-          return callback( new Error('Improperly formatted kisse(s)! Is this your first time?'));
+          return callback( new Error('Improperly formatted kiss(es)! Is this your first time?'));
         }
       });
     }
 
     if ( media ) {
+      console.log( 'appending media' );
       form.append( 'media', media );
       if ( caption ) {
         form.append( 'caption', caption );
@@ -128,7 +135,7 @@ var AvocadoJS = new Class({
   },
 
   _send: function (opts, params, callback) {
-    var _404= 'Not Found';
+    var _404 = 'Not Found';
     var _400 = 'Missing Data';
     var msg;
     params = params || {};
@@ -224,7 +231,6 @@ var AvocadoJS = new Class({
         return callback( new Error( sf( "Media '{0}' does not exist", mediaPath ) ) );
       }
 
-      var buff = fs.readFileSync( mediaPath );
       self._send({
         path: '/media/',
         method: 'post'

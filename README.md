@@ -36,7 +36,7 @@ avo.login(function(err, currentUserModel) {
    avo.logout( function ( err ) {} );
    
    avo.getRecentActivities( {
-    before: Date.now() //  Unix timestamp in milliseconds OR
+    before: Date.now(), //  Unix timestamp in milliseconds OR
     after: Date.now() //  Unix timestamp in milliseconds
     
     // NOTE you CANNOT specify both before AND after as this will return an
@@ -90,7 +90,7 @@ avo.login(function(err, currentUserModel) {
   avo.upload( '/path/to/media.jpeg', function (err, newMediaModel) {} );
   
   avo.getRecentMedia( {
-    before: Date.now() //  Unix timestamp in milliseconds
+    before: Date.now(), //  Unix timestamp in milliseconds
     after: Date.now() //  Unix timestamp in milliseconds
   }, function (err, mediaModelArray) {} );
   
